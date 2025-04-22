@@ -51,6 +51,30 @@ const Banco = () => {
             console.log(row.id, row.NAME);
         }
     }
+    async function DeletarDados() {
+        db = await Banco();
+        try {
+            db.execAsync(
+            `DELETE FROM USUARIOS WHERE value = $value', { $value: 'Zé Matraca' };`
+            );
+            console.log("Deletado com Sucesso!");
+        }
+        catch (erro){
+            console.log("Erro ao deletar" +erro);
+        }
+    }
+    async function AtualizarDados() {
+        db = await Banco();
+        try {
+            db.execAsync(
+                `'UPDATE USUARIOS SET NAME = ? WHERE id = ?' [1, 'testando']`
+            );
+            console.log("Atualizado com sucesso!");
+        }
+        catch (erro){
+            console.log("Erro ao atualizar dados" +erro);
+        }
+    }
 
     return (
         <View>
@@ -65,6 +89,14 @@ const Banco = () => {
             <Button
                 title="Inserir Dados"
                 onPress={InserirDados}
+            />
+            <Button
+                title="Atualizar Dados"
+                onPress={AtualizarDados}
+            />
+            <Button
+                title="Deletar Dados"
+                onPress={DeletarDados}
             />
             <Button
                 title="Exibir Dados"
