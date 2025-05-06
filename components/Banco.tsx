@@ -70,8 +70,7 @@ const Banco = () => {
     async function DeletarDados() {
         try {
             await db.runAsync(
-                `DELETE FROM USUARIOS WHERE NAME = ?`,
-                ['Zé Matraca']
+                `DELETE FROM USUARIOS`
             );
             console.log("Deletado com sucesso!");
             Alert.alert('Dados deletados', 'Dados deletados com sucesso');
