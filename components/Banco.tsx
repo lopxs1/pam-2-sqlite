@@ -1,109 +1,174 @@
-import react from 'react';
-import { View, Button } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import * as SQLite from 'expo-sqlite';
 
 let db;
 
-//componente
 const Banco = () => {
-    async function Banco() {
+    const [isDbCreated, setIsDbCreated] = useState(false);
+    const [isTableCreated, setIsTableCreated] = useState(false);
+
+    async function CriarBanco() {
         db = await SQLite.openDatabaseAsync('PAM2');
         if (db) {
             console.log("Banco criado");
-            return db;
-        }
-        else {
+            setIsDbCreated(true);
+            Alert.alert('Banco criado', 'O banco foi devidamente criado');
+        } else {
             console.log("Erro ao criar Banco");
+            Alert.alert('Erro', 'Erro ao criar o banco de dados');
         }
     }
 
-    //criar tabela
     async function CriarTabela() {
         try {
             await db.execAsync(`
                 PRAGMA journal_mode = WAL;
                 CREATE TABLE IF NOT EXISTS USUARIOS (id INTEGER PRIMARY KEY NOT NULL, NAME TEXT NOT NULL);`
-            )
-            console.log("tabela criada")
+            );
+            console.log("Tabela criada");
+            setIsTableCreated(true);
+            Alert.alert('Tablea criada', 'A tabela foi devidamente criada');
+            
         } catch (erro) {
-            console.log("Erro")
+            console.log("Erro ao criar tabela", erro);
+            Alert.alert('Erro', 'Erro ao criar a tabela');
         }
-
-
     }
 
     async function InserirDados() {
-        db = await Banco();
         try {
-            db.execAsync(
-                ` INSERT INTO USUARIOS (NOME) VALUES ('Ricardo'), ('Zé Matraca'), ('Maria'); `
+            await db.execAsync(`
+                INSERT INTO USUARIOS (NAME) VALUES 
+                ('Ricardo'), 
+                ('Zé Matraca'), 
+                ('Maria');`
             );
-            console.log("Inserido");
-        }
-        catch (erro) {
-            console.log("Erro ao inserir" + erro)
+            console.log("Dados inseridos");
+            Alert.alert('Dados inseridos', 'Os dados foram devidamente inseridos');
+            
+        } catch (erro) {
+            console.log("Erro ao inserir dados", erro);
+            Alert.alert('Erro', 'Erro ao inserir os dados');
         }
     }
+
     async function ExibirDados() {
-        db = await Banco();
-        const allRows = await db.getAllAsync('SELECT * FROM USUARIOS');
-        for (const row of allRows) {
-            console.log(row.id, row.NAME);
+        try {
+            const allRows = await db.getAllAsync('SELECT * FROM USUARIOS');
+            console.log("Estrutura dos dados:", allRows);
+            for (const row of allRows) {
+                console.log('Usuário:', row.id, row.NAME);
+            }
+            Alert.alert('Dados exibidos', 'Veja os dados no console');
+        } catch (erro) {
+            console.log("Erro ao exibir dados:", erro);
+            Alert.alert('Dados exibidos', 'Veja os dados no console');
         }
     }
+
     async function DeletarDados() {
-        db = await Banco();
         try {
-            db.execAsync(
-            `DELETE FROM USUARIOS WHERE value = $value', { $value: 'Zé Matraca' };`
+            await db.runAsync(
+                `DELETE FROM USUARIOS WHERE NAME = ?`,
+                ['Zé Matraca']
             );
-            console.log("Deletado com Sucesso!");
-        }
-        catch (erro){
-            console.log("Erro ao deletar" +erro);
+            console.log("Deletado com sucesso!");
+            Alert.alert('Dados deletados', 'Dados deletados com sucesso');
+        } catch (erro) {
+            console.log("Erro ao deletar dados", erro);
+            Alert.alert('Erro', 'Erro ao deletar dados');
         }
     }
+
     async function AtualizarDados() {
-        db = await Banco();
         try {
-            db.execAsync(
-                `'UPDATE USUARIOS SET NAME = ? WHERE id = ?' [1, 'testando']`
+            await db.runAsync(
+                `UPDATE USUARIOS SET NAME = ? WHERE id = ?`,
+                ['testando', 1]
             );
             console.log("Atualizado com sucesso!");
-        }
-        catch (erro){
-            console.log("Erro ao atualizar dados" +erro);
+            Alert.alert('Dados atualizados', 'Veja os dados no console');
+        } catch (erro) {
+            console.log("Erro ao atualizar dados", erro);
+            Alert.alert('Erro', 'Erro ao atualizar os dados');
         }
     }
 
     return (
-        <View>
-            <Button
-                title="Criar BD"
-                onPress={Banco}
-            />
-            <Button
-                title="Criar Tabela"
+        <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={CriarBanco}
+            >
+                <Text style={styles.buttonText}>Criar Banco</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.button, !isDbCreated && styles.disabled]}
                 onPress={CriarTabela}
-            />
-            <Button
-                title="Inserir Dados"
+                disabled={!isDbCreated}
+            >
+                <Text style={styles.buttonText}>Criar Tabela</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.button, !isDbCreated || !isTableCreated ? styles.disabled : null]}
                 onPress={InserirDados}
-            />
-            <Button
-                title="Atualizar Dados"
+                disabled={!isDbCreated || !isTableCreated}
+            >
+                <Text style={styles.buttonText}>Inserir Dados</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.button, !isDbCreated || !isTableCreated ? styles.disabled : null]}
                 onPress={AtualizarDados}
-            />
-            <Button
-                title="Deletar Dados"
+                disabled={!isDbCreated || !isTableCreated}
+            >
+                <Text style={styles.buttonText}>Atualizar Dados</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.button, !isDbCreated || !isTableCreated ? styles.disabled : null]}
                 onPress={DeletarDados}
-            />
-            <Button
-                title="Exibir Dados"
+                disabled={!isDbCreated || !isTableCreated}
+            >
+                <Text style={styles.buttonText}>Deletar Dados</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.button, !isDbCreated || !isTableCreated ? styles.disabled : null]} 
                 onPress={ExibirDados}
-            />
+                disabled={!isDbCreated || !isTableCreated}
+            >
+                <Text style={styles.buttonText}>Exibir Dados</Text>
+            </TouchableOpacity>
         </View>
-    )
-}
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 10,
+    },
+    button: {
+        backgroundColor: '#007BFF',
+        width: 150,
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 5,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    disabled: {
+        backgroundColor: '#D3D3D3',
+    }
+});
 
 export default Banco;
